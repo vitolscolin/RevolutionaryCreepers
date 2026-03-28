@@ -15,6 +15,29 @@ TrialTwin AI combines:
 
 The MVP uses synthetic diabetes-like trial data to make adherence-driven future scenarios intuitive during a demo.
 
+## ELI5
+
+Imagine a clinical trial team has a smart practice patient for every real participant.
+
+TrialTwin AI does three simple things:
+
+1. It makes fake but realistic patient data for a clinical trial.
+2. It studies that data to learn patterns that usually come before safety issues, dropout, or poor adherence.
+3. It shows trial staff what might happen next if a participant stays on track, falls off track, or gets help right away.
+
+In plain English:
+
+- the backend creates synthetic patient histories
+- the models look at recent patterns like symptoms, blood pressure, glucose trend, and medication behavior
+- the app turns that into risk scores
+- the simulator then shows two or three possible futures on the screen
+
+So the app is basically saying:
+
+"Based on what this participant has looked like lately, here is how risky they seem right now, and here is how their future may change depending on what they do next."
+
+That is why it feels like a digital twin. It is a lightweight, trial-focused mirror of a participant's current state plus a simple forecast of where they might go.
+
 ## Architecture
 
 - `backend/scripts/generate_synthetic.py` creates patient and observation data
@@ -76,13 +99,13 @@ pip3 install --user -r backend/requirements.txt
 ### Generate synthetic data
 
 ```bash
-python backend/scripts/generate_synthetic.py
+python3 backend/scripts/generate_synthetic.py
 ```
 
 ### Train the models
 
 ```bash
-python backend/scripts/train_model.py
+python3 backend/scripts/train_model.py
 ```
 
 ### Run the backend
@@ -96,7 +119,7 @@ python3 -m uvicorn backend.app.main:app --reload
 In a second terminal, with the backend running:
 
 ```bash
-python backend/scripts/seed_demo_data.py
+python3 backend/scripts/seed_demo_data.py
 ```
 
 ### Run the frontend
@@ -115,8 +138,8 @@ Open `http://localhost:5173`.
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
-python backend/scripts/generate_synthetic.py
-python backend/scripts/train_model.py
+python3 backend/scripts/generate_synthetic.py
+python3 backend/scripts/train_model.py
 python3 -m uvicorn backend.app.main:app --reload
 ```
 
@@ -124,7 +147,25 @@ Then in another terminal:
 
 ```bash
 source .venv/bin/activate
-python backend/scripts/seed_demo_data.py
+python3 backend/scripts/seed_demo_data.py
+cd frontend
+npm install
+npm run dev
+```
+
+If your machine does not support `python3 -m venv`, use this instead:
+
+```bash
+pip3 install --user -r backend/requirements.txt
+python3 backend/scripts/generate_synthetic.py
+python3 backend/scripts/train_model.py
+python3 -m uvicorn backend.app.main:app --reload
+```
+
+Then in another terminal:
+
+```bash
+python3 backend/scripts/seed_demo_data.py
 cd frontend
 npm install
 npm run dev

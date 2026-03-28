@@ -31,7 +31,11 @@ class TwinEngine:
         existing = self.twins.get(patient["patient_id"])
         merged_observations = list(existing.observations) if existing else []
         merged_observations.extend(observations)
-        merged_observations = sorted(merged_observations, key=lambda item: item["ts"])[-60:]
+        deduped_by_timestamp: dict[str, dict] = {}
+        for observation in merged_observations:
+            deduped_by_timestamp[observation["ts"]] = observation
+
+        merged_observations = sorted(deduped_by_timestamp.values(), key=lambda item: item["ts"])[-60:]
 
         self.twins[patient["patient_id"]] = PatientTwin(
             patient=patient,

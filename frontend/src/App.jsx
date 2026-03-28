@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import Alerts from "./components/Alerts";
+import DataJourney from "./components/DataJourney";
+import DecisionLogic from "./components/DecisionLogic";
+import ModelInsights from "./components/ModelInsights";
 import PatientSelector from "./components/PatientSelector";
 import ProjectionComparison from "./components/ProjectionComparison";
 import RiskChart from "./components/RiskChart";
@@ -103,6 +106,9 @@ export default function App() {
             onChange={setSelectedPatientId}
           />
           <TwinSummaryCard twin={twin} />
+          <DataJourney twin={twin} />
+          <ModelInsights twin={twin} />
+          <DecisionLogic twin={twin} />
           <ProjectionComparison simulation={simulation} />
           <RiskChart twin={twin} />
         </div>
