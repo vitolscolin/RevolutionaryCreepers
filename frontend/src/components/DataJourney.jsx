@@ -1,26 +1,34 @@
-function buildFeatureSummary(twin) {
-  if (!twin) {
-    return [];
-  }
-
+function buildMethodCards(twin) {
   const latest = twin.current_state;
 
   return [
     {
-      title: "Synthetic source profile",
-      detail: `Baseline HbA1c ${twin.patient_summary.hba1c}, age ${twin.patient_summary.age}, exercise ${twin.patient_summary.exercise_score}.`
+      title: "Synthetic trial portals",
+      detail:
+        "We simulate participant baselines, daily medication behavior, symptom burden, lab flags, and retention events to create a believable clinical operations stream."
     },
     {
-      title: "Recent trial signals",
-      detail: `Latest glucose proxy ${latest.glucose_proxy}, symptoms ${latest.symptom_score}, adherence ${Math.round(latest.adherence_percent)}%.`
+      title: "Feature pipeline",
+      detail:
+        "Rolling averages, short-run slopes, and recent flags convert raw observations into compact features for the risk models."
     },
     {
-      title: "Engineered model inputs",
-      detail: "Rolling averages, 7-day slopes, drug level trend, blood pressure trend, and recent lab flags."
+      title: "Interpretable ML models",
+      detail:
+        "Separate logistic regression models estimate safety, dropout, and adherence pressure from those engineered features."
     },
     {
-      title: "Operational outputs",
-      detail: "Safety, dropout, adherence, health score, alerts, and scenario comparisons for trial staff."
+      title: "Twin engine",
+      detail:
+        "The simulator projects future states under adherent, non-adherent, and intervention paths while preserving a transparent rules-based story."
+    },
+    {
+      title: "Source profile",
+      detail: `Example baseline: HbA1c ${twin.patient_summary.hba1c}, age ${twin.patient_summary.age}, exercise score ${twin.patient_summary.exercise_score}.`
+    },
+    {
+      title: "Recent risk digest",
+      detail: `Latest glucose ${latest.glucose_proxy}, symptoms ${latest.symptom_score}, adherence ${Math.round(latest.adherence_percent)}%.`
     }
   ];
 }
@@ -30,66 +38,28 @@ export default function DataJourney({ twin }) {
     return null;
   }
 
-  const steps = buildFeatureSummary(twin);
-
   return (
-    <section className="panel">
-      <div className="section-head">
+    <section id="methodology" className="method-section">
+      <div className="section-heading">
         <div>
-          <p className="eyebrow">Data Journey</p>
+          <p className="eyebrow">Methodology</p>
           <h2>How we generated and consumed the data</h2>
-          <p className="muted">
-            The dashboard values are not hand-entered. They are created from synthetic longitudinal
-            patient records, transformed into interpretable model features, then consumed by the
-            twin engine and scenario simulator.
+          <p className="section-copy">
+            The split-screen story is powered by synthetic participant histories, interpretable
+            feature engineering, and a lightweight twin engine built for a hackathon demo.
           </p>
         </div>
       </div>
 
-      <div className="journey-grid">
-        <div className="journey-card">
-          <span className="journey-step">1. Generate</span>
-          <strong>Synthetic trial patients</strong>
-          <p>
-            We create diabetes-like participant baselines and daily observations with medication
-            decay, adherence drift, symptoms, lab flags, adverse events, and dropout events.
-          </p>
-        </div>
-
-        <div className="journey-card">
-          <span className="journey-step">2. Engineer</span>
-          <strong>Feature pipeline</strong>
-          <p>
-            The backend converts raw observations into latest values, rolling averages, and short
-            trend slopes so the models can score current participant risk.
-          </p>
-        </div>
-
-        <div className="journey-card">
-          <span className="journey-step">3. Learn</span>
-          <strong>Interpretable ML models</strong>
-          <p>
-            Logistic regression models estimate safety, dropout, and adherence risk from those
-            features using patterns learned from synthetic patient history.
-          </p>
-        </div>
-
-        <div className="journey-card">
-          <span className="journey-step">4. Simulate</span>
-          <strong>Twin + futures</strong>
-          <p>
-            The twin engine consumes the risk scores and latest state, then projects adherent,
-            non-adherent, and intervention paths with transparent rules-based logic.
-          </p>
-        </div>
-      </div>
-
-      <div className="insight-grid">
-        {steps.map((step) => (
-          <div key={step.title} className="insight-card">
-            <span>{step.title}</span>
-            <strong>{step.detail}</strong>
-          </div>
+      <div className="method-grid">
+        {buildMethodCards(twin).map((item, index) => (
+          <article key={item.title} className="method-card">
+            <span className="method-icon">{String(index + 1).padStart(2, "0")}</span>
+            <div>
+              <h3>{item.title}</h3>
+              <p>{item.detail}</p>
+            </div>
+          </article>
         ))}
       </div>
     </section>

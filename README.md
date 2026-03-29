@@ -1,61 +1,71 @@
 # TrialTwin AI
 
-TrialTwin AI is a hackathon-ready MVP for clinical trial operations teams. It creates a lightweight digital twin for each synthetic participant, scores current safety, dropout, and adherence risk, and simulates how future outcomes diverge under adherent, non-adherent, and intervention scenarios.
+TrialTwin AI is a hackathon-ready clinical trial operations demo that gives each synthetic participant a lightweight digital twin. It helps a trial team understand two possible futures for the same participant: what happens if they stay adherent, and what happens if they fall off track.
 
-This is not a biological digital twin. It is a trial-focused monitoring and scenario simulation tool designed for rapid demo value.
+This is not a biological digital twin. It is an explainable monitoring and scenario simulation tool built for fast communication, not clinical deployment.
 
-## Product Overview
+## What It Does
 
-TrialTwin AI combines:
+TrialTwin AI combines four ideas in one experience:
 
-- clinical trial monitoring and decision support
-- explainable risk scoring
-- dual-future simulation for participant behavior
-- a visual dashboard for trial staff and CRO teams
+- synthetic participant generation
+- interpretable risk scoring
+- twin-based future simulation
+- a visual dashboard that makes divergence obvious
 
-The MVP uses synthetic diabetes-like trial data to make adherence-driven future scenarios intuitive during a demo.
+The app shows how recent participant behavior can affect safety risk, dropout risk, and projected health score over time.
 
-## ELI5
+## Why It Matters
 
-Imagine a clinical trial team has a smart practice patient for every real participant.
+Clinical trials do not just fail because of biology. They also fail because participants drift, disengage, or develop signals that are noticed too late.
 
-TrialTwin AI does three simple things:
+TrialTwin AI is designed to help a trial operations team answer a simple question:
 
-1. It makes fake but realistic patient data for a clinical trial.
-2. It studies that data to learn patterns that usually come before safety issues, dropout, or poor adherence.
-3. It shows trial staff what might happen next if a participant stays on track, falls off track, or gets help right away.
+If this participant keeps going the way they are going now, what is most likely to happen next?
 
-In plain English:
+And just as importantly:
 
-- the backend creates synthetic patient histories
-- the models look at recent patterns like symptoms, blood pressure, glucose trend, and medication behavior
-- the app turns that into risk scores
-- the simulator then shows two or three possible futures on the screen
+What changes if we intervene early?
 
-So the app is basically saying:
+## Core Demo Story
 
-"Based on what this participant has looked like lately, here is how risky they seem right now, and here is how their future may change depending on what they do next."
+The product is built around a judge-friendly narrative:
 
-That is why it feels like a digital twin. It is a lightweight, trial-focused mirror of a participant's current state plus a simple forecast of where they might go.
+1. Pick a participant.
+2. Show their current risk picture.
+3. Split the participant into two futures.
+4. Compare the adherent path with the non-adherent path.
+5. Show how an intervention can bend the future back toward stability.
 
-## Architecture
+The UI is intentionally designed so the concept is visible before anyone reads the details.
 
-- `backend/scripts/generate_synthetic.py` creates patient and observation data
-- `backend/scripts/train_model.py` trains interpretable scikit-learn models
-- `backend/app/twin_engine.py` maintains in-memory participant twin state
-- `backend/app/main.py` serves FastAPI endpoints for monitoring and simulation
-- `frontend/` provides a React + Vite dashboard with Recharts visualizations
+## How It Works
 
-## Folder Structure
+At a high level:
+
+1. The backend generates synthetic diabetes-like trial participants and daily observations.
+2. Feature engineering turns those histories into usable model inputs such as rolling averages and short-term slopes.
+3. Logistic regression models estimate safety, dropout, and adherence risk.
+4. A lightweight twin engine uses the current state plus scenario rules to project future paths.
+5. The frontend presents those paths in a split-screen comparison.
+
+## Tech Stack
+
+- Frontend: React + Vite
+- Visualization: Recharts + custom SVG
+- Backend: FastAPI
+- Modeling: pandas, scikit-learn
+- Data: fully synthetic CSV- and JSON-based demo data
+
+## Repo Map
 
 ```text
 backend/
   app/
     main.py
-    schemas.py
     twin_engine.py
-    risk_equations.py
     feature_pipeline.py
+    risk_equations.py
     model_store.py
   scripts/
     generate_synthetic.py
@@ -63,26 +73,17 @@ backend/
     seed_demo_data.py
   data/
   artifacts/
-  requirements.txt
 
 frontend/
   src/
-    components/
-      PatientSelector.jsx
-      TwinSummaryCard.jsx
-      RiskChart.jsx
-      ScenarioButtons.jsx
-      Alerts.jsx
-      ProjectionComparison.jsx
-    api.js
     App.jsx
-    main.jsx
-  package.json
+    api.js
+    components/
 ```
 
-## Setup
+## Quickstart
 
-### Backend dependencies
+### 1. Install backend dependencies
 
 ```bash
 python3 -m venv .venv
@@ -90,39 +91,39 @@ source .venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-If `python3 -m venv` is unavailable on your machine, use:
+If `python3 -m venv` is unavailable:
 
 ```bash
 pip3 install --user -r backend/requirements.txt
 ```
 
-### Generate synthetic data
+### 2. Generate synthetic data
 
 ```bash
 python3 backend/scripts/generate_synthetic.py
 ```
 
-### Train the models
+### 3. Train the models
 
 ```bash
 python3 backend/scripts/train_model.py
 ```
 
-### Run the backend
+### 4. Run the backend
 
 ```bash
 python3 -m uvicorn backend.app.main:app --reload
 ```
 
-### Seed demo data into the API
+### 5. Seed demo data
 
-In a second terminal, with the backend running:
+In a second terminal:
 
 ```bash
 python3 backend/scripts/seed_demo_data.py
 ```
 
-### Run the frontend
+### 6. Run the frontend
 
 ```bash
 cd frontend
@@ -132,84 +133,27 @@ npm run dev
 
 Open `http://localhost:5173`.
 
-## 5-Minute Quickstart
+## Demo Flow For Visitors
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-python3 backend/scripts/generate_synthetic.py
-python3 backend/scripts/train_model.py
-python3 -m uvicorn backend.app.main:app --reload
-```
+If you are opening the app for the first time, the best walkthrough is:
 
-Then in another terminal:
+1. Start on the `Digital Twin` tab.
+2. Choose a higher-risk participant such as `rising_risk` or `poor_adherence`.
+3. Compare the adherent and non-adherent twin panels.
+4. Look at the diverging outcomes chart and projected scores.
+5. Review the observed trend and the action queue.
+6. Switch the scenario focus to `intervention_now` to show reversibility.
 
-```bash
-source .venv/bin/activate
-python3 backend/scripts/seed_demo_data.py
-cd frontend
-npm install
-npm run dev
-```
+## Important Constraints
 
-If your machine does not support `python3 -m venv`, use this instead:
+- Uses synthetic data only.
+- Uses simple, interpretable models.
+- Uses an in-memory twin engine for demo speed.
+- Is meant for education and hackathon storytelling, not clinical care.
 
-```bash
-pip3 install --user -r backend/requirements.txt
-python3 backend/scripts/generate_synthetic.py
-python3 backend/scripts/train_model.py
-python3 -m uvicorn backend.app.main:app --reload
-```
+## Want The Detailed Teammate Guide?
 
-Then in another terminal:
-
-```bash
-python3 backend/scripts/seed_demo_data.py
-cd frontend
-npm install
-npm run dev
-```
-
-## Example API Usage
-
-Health check:
-
-```bash
-curl http://localhost:8000/health
-```
-
-List patients:
-
-```bash
-curl -H "x-trialtwin-token: dev-token" http://localhost:8000/patients
-```
-
-Simulate an intervention:
-
-```bash
-curl -X POST http://localhost:8000/simulate \
-  -H "Content-Type: application/json" \
-  -H "x-trialtwin-token: dev-token" \
-  -d '{"patient_id":"P003","selected_scenario":"intervention_now","scenarios":["adherent","non_adherent","intervention_now"],"days":21}'
-```
-
-## Demo Flow For Judges
-
-1. Start on the dashboard and explain that each participant has a lightweight trial twin.
-2. Select the `rising_risk` or `poor_adherence` demo patient.
-3. Highlight current safety, dropout, and adherence risk.
-4. Show alerts and recent participant observations.
-5. Compare adherent and non-adherent futures on the projection chart.
-6. Switch to `intervention_now` to show reversibility and decision support value.
-
-## Limitations And Future Work
-
-- Uses synthetic data and simple interpretable models only.
-- In-memory twin storage is reset when the API restarts.
-- The projection engine is rules-based rather than a true causal or physiological simulator.
-- Authentication is a single shared token intended for local demo use.
-- Future work could add protocol milestones, site-level aggregation, and richer intervention workflows.
+See [TEAM_README.md](/home/colinvitols/GitHub/Hackathon/RevolutionaryCreepers/TEAM_README.md) for the full step-by-step explanation of what the app is doing, why each layer exists, and how to explain it during the presentation.
 
 ## Disclaimer
 
