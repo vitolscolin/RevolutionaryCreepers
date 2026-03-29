@@ -1,30 +1,34 @@
 const options = [
-  { value: "adherent", label: "Adherent Future" },
-  { value: "non_adherent", label: "Non-Adherent Future" },
-  { value: "intervention_now", label: "Intervention Now" }
+  {
+    value: "adherent",
+    label: "Monitoring Center",
+    detail: "Focus the narrative on the stable path while keeping both futures visible."
+  },
+  {
+    value: "non_adherent",
+    label: "Risk Pressure",
+    detail: "Shift the framing toward dropout and deteriorating health if adherence slips."
+  },
+  {
+    value: "intervention_now",
+    label: "Recovery Move",
+    detail: "Show how an ops intervention bends the trajectory back toward the healthier twin."
+  }
 ];
 
 export default function ScenarioButtons({ selectedScenario, onChange }) {
   return (
-    <section className="panel">
-      <div className="section-head">
-        <div>
-          <p className="eyebrow">Scenario Lab</p>
-          <h2>Choose the focal future</h2>
-        </div>
-      </div>
-
-      <div className="scenario-buttons">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            className={option.value === selectedScenario ? "scenario-button active" : "scenario-button"}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+    <section className="focus-band" aria-label="Scenario focus">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          className={option.value === selectedScenario ? "focus-pill active" : "focus-pill"}
+          onClick={() => onChange(option.value)}
+        >
+          <span>{option.label}</span>
+          <small>{option.detail}</small>
+        </button>
+      ))}
     </section>
   );
 }

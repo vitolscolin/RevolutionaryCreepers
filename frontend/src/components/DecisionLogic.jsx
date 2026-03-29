@@ -1,46 +1,13 @@
+import CountUpValue from "./CountUpValue";
+
 function classifyRisk(value) {
   if (value >= 0.7) {
-    return "High";
+    return "high";
   }
   if (value >= 0.4) {
-    return "Moderate";
+    return "watch";
   }
-  return "Low";
-}
-
-function buildDecisionRows(twin) {
-  const latest = twin.current_state;
-  const risks = twin.current_risks;
-
-  return [
-    {
-      model: "Safety model",
-      score: `${Math.round(risks.safety_risk * 100)}%`,
-      level: classifyRisk(risks.safety_risk),
-      reason:
-        latest.glucose_proxy > 145 || latest.symptom_score > 5
-          ? "Elevated glucose proxy and symptom burden push the probability upward."
-          : "Controlled symptoms and glucose reduce near-term safety pressure."
-    },
-    {
-      model: "Dropout model",
-      score: `${Math.round(risks.dropout_risk * 100)}%`,
-      level: classifyRisk(risks.dropout_risk),
-      reason:
-        latest.adherence_percent < 70
-          ? "Falling adherence increases the chance the participant disengages from the protocol."
-          : "The current pattern suggests the participant is more likely to remain engaged."
-    },
-    {
-      model: "Adherence model",
-      score: `${Math.round(risks.adherence_risk * 100)}%`,
-      level: classifyRisk(risks.adherence_risk),
-      reason:
-        latest.drug_level < 0.8
-          ? "Low drug exposure plus recent adherence drift signals further deterioration risk."
-          : "Current medication behavior looks more likely to remain stable."
-    }
-  ];
+  return "safe";
 }
 
 export default function DecisionLogic({ twin }) {
@@ -48,41 +15,61 @@ export default function DecisionLogic({ twin }) {
     return null;
   }
 
-  const rows = buildDecisionRows(twin);
+  const risks = twin.current_risks;
+  const escalationProxy = (risks.safety_risk + risks.dropout_risk + risks.adherence_risk) * 100;
+  const pipeline = ["Inputs", "Features", "Models", "Risk scores", "Recommendations"];
+  const metrics = [
+    {
+      label: "Safety model score",
+      value: risks.safety_risk * 100,
+      decimals: 0,
+      tone: classifyRisk(risks.safety_risk)
+    },
+    {
+      label: "Dropout model score",
+      value: risks.dropout_risk * 100,
+      decimals: 0,
+      tone: classifyRisk(risks.dropout_risk)
+    },
+    {
+      label: "Escalation proxy score",
+      value: escalationProxy,
+      decimals: 1,
+      tone: escalationProxy >= 150 ? "high" : escalationProxy >= 100 ? "watch" : "safe"
+    }
+  ];
 
   return (
-    <section className="panel">
-      <div className="section-head">
+    <section className="decision-section">
+      <div className="section-heading">
         <div>
-          <p className="eyebrow">Decision Logic</p>
-          <h2>How the models make these calls</h2>
-          <p className="muted">
-            Each risk score comes from a separate logistic regression model. The models weigh recent
-            vitals, symptom burden, adherence behavior, drug exposure, and short-term trends to
-            estimate what is most likely to happen next.
+          <p className="eyebrow">Decision Engine</p>
+          <h2>How the twin makes decisions</h2>
+          <p className="section-copy">
+            We turn recent observations into engineered features, feed them into interpretable
+            models, then convert those scores into operational recommendations.
           </p>
         </div>
       </div>
 
-      <div className="decision-grid">
-        {rows.map((row) => (
-          <div key={row.model} className="decision-card">
-            <div className="decision-topline">
-              <span>{row.model}</span>
-              <span className={`decision-level ${row.level.toLowerCase()}`}>{row.level}</span>
-            </div>
-            <strong>{row.score}</strong>
-            <p>{row.reason}</p>
+      <div className="pipeline">
+        {pipeline.map((step, index) => (
+          <div key={step} className="pipeline-step">
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{step}</strong>
           </div>
         ))}
       </div>
 
-      <div className="decision-footer">
-        <p className="muted">
-          In the backend, these models operate on engineered features such as rolling averages,
-          seven-day slopes, lab flags, and adherence behavior rather than raw single-point values
-          alone.
-        </p>
+      <div className="decision-metrics">
+        {metrics.map((metric) => (
+          <article key={metric.label} className={`decision-metric ${metric.tone}`}>
+            <span>{metric.label}</span>
+            <strong>
+              <CountUpValue value={metric.value} decimals={metric.decimals} suffix={metric.label.includes("score") && metric.decimals === 0 ? "%" : ""} />
+            </strong>
+          </article>
+        ))}
       </div>
     </section>
   );
