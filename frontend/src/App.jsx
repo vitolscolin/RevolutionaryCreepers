@@ -16,7 +16,7 @@ const navItems = [
   { id: "tab-twin", label: "Digital Twin" },
   { id: "tab-methodology", label: "Methodology" },
   { id: "tab-decisions", label: "Decisions" },
-  { id: "tab-pitch", label: "Pitch" }
+  // { id: "tab-pitch", label: "Pitch" },
 ];
 
 function getInitialTab(validTabIds) {
@@ -36,7 +36,10 @@ export default function App() {
   const [selectedScenario, setSelectedScenario] = useState("adherent");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const validTabIds = useMemo(() => new Set(navItems.map((item) => item.id)), []);
+  const validTabIds = useMemo(
+    () => new Set(navItems.map((item) => item.id)),
+    [],
+  );
   const [activeTab, setActiveTab] = useState(() => getInitialTab(validTabIds));
 
   useEffect(() => {
@@ -99,7 +102,7 @@ export default function App() {
           patient_id: selectedPatientId,
           selected_scenario: selectedScenario,
           scenarios: defaultScenarios,
-          days: 21
+          days: 21,
         });
         setSimulation(simulationResponse);
       } catch (requestError) {
@@ -169,14 +172,18 @@ export default function App() {
       </header>
 
       <div className="tab-content-area">
-        <section id="tab-overview" className={`tab-panel ${activeTab === "tab-overview" ? "active" : ""}`} hidden={activeTab !== "tab-overview"}>
+        <section
+          id="tab-overview"
+          className={`tab-panel ${activeTab === "tab-overview" ? "active" : ""}`}
+          hidden={activeTab !== "tab-overview"}
+        >
           <section className="hero-shell">
             <div className="hero-copy">
               <p className="eyebrow">Split Screen / Mirror Twin</p>
               <h2>Two futures. One choice.</h2>
               <p className="hero-subtitle">
-                TrialTwin AI turns a synthetic participant into two visible outcomes: one adherent,
-                one non-adherent. Judges should understand the product before they read a single metric.
+                TrialTwin AI turns a synthetic participant into two visible
+                outcomes: one adherent, one non-adherent.
               </p>
             </div>
 
@@ -189,12 +196,19 @@ export default function App() {
             </div>
           </section>
 
-          <ScenarioButtons selectedScenario={selectedScenario} onChange={setSelectedScenario} />
+          <ScenarioButtons
+            selectedScenario={selectedScenario}
+            onChange={setSelectedScenario}
+          />
           <p className="status-banner">{statusMessage}</p>
           {error ? <p className="error-banner">{error}</p> : null}
         </section>
 
-        <section id="tab-twin" className={`tab-panel ${activeTab === "tab-twin" ? "active" : ""}`} hidden={activeTab !== "tab-twin"}>
+        <section
+          id="tab-twin"
+          className={`tab-panel ${activeTab === "tab-twin" ? "active" : ""}`}
+          hidden={activeTab !== "tab-twin"}
+        >
           <section className="mirror-stage">
             <div className="mirror-shell">
               <div className="mirror-seam" aria-hidden="true">
@@ -209,16 +223,28 @@ export default function App() {
           <RiskChart twin={twin} />
         </section>
 
-        <section id="tab-methodology" className={`tab-panel ${activeTab === "tab-methodology" ? "active" : ""}`} hidden={activeTab !== "tab-methodology"}>
+        <section
+          id="tab-methodology"
+          className={`tab-panel ${activeTab === "tab-methodology" ? "active" : ""}`}
+          hidden={activeTab !== "tab-methodology"}
+        >
           <DataJourney twin={twin} />
         </section>
 
-        <section id="tab-decisions" className={`tab-panel ${activeTab === "tab-decisions" ? "active" : ""}`} hidden={activeTab !== "tab-decisions"}>
+        <section
+          id="tab-decisions"
+          className={`tab-panel ${activeTab === "tab-decisions" ? "active" : ""}`}
+          hidden={activeTab !== "tab-decisions"}
+        >
           <DecisionLogic twin={twin} />
           <Alerts alerts={twin?.alerts || []} />
         </section>
 
-        <section id="tab-pitch" className={`tab-panel ${activeTab === "tab-pitch" ? "active" : ""}`} hidden={activeTab !== "tab-pitch"}>
+        {/* <section
+          id="tab-pitch"
+          className={`tab-panel ${activeTab === "tab-pitch" ? "active" : ""}`}
+          hidden={activeTab !== "tab-pitch"}
+        >
           <section className="pitch-section">
             <div className="section-heading">
               <p className="eyebrow">Pitch</p>
@@ -231,8 +257,8 @@ export default function App() {
                 <div>
                   <strong>Fast story arc</strong>
                   <p>
-                    One participant becomes two futures instantly, so the demo explains itself while
-                    the presenter talks.
+                    One participant becomes two futures instantly, so the demo
+                    explains itself while the presenter talks.
                   </p>
                 </div>
               </div>
@@ -241,8 +267,8 @@ export default function App() {
                 <div>
                   <strong>Transparent enough to trust</strong>
                   <p>
-                    The methodology and decision flow are explainable, demo-safe, and easy to defend
-                    under judge questioning.
+                    The methodology and decision flow are explainable,
+                    demo-safe, and easy to defend under judge questioning.
                   </p>
                 </div>
               </div>
@@ -251,20 +277,22 @@ export default function App() {
                 <div>
                   <strong>Demo-safe scope</strong>
                   <p>
-                    Synthetic data only, lightweight twin logic, and a polished interface built for a
-                    24-hour hackathon reveal.
+                    Synthetic data only, lightweight twin logic, and a polished
+                    interface built for a 24-hour hackathon reveal.
                   </p>
                 </div>
               </div>
             </div>
           </section>
-        </section>
+        </section> */}
       </div>
 
       <footer className="site-footer">
         <div>
           <p className="footer-title">Built at RevolutionUC 2026</p>
-          <p className="footer-meta">Team RevolutionaryCreepers · TrialTwin AI</p>
+          <p className="footer-meta">
+            Team RevolutionaryCreepers · TrialTwin AI
+          </p>
         </div>
         <div className="footer-badge">Two sides. Two futures.</div>
       </footer>
