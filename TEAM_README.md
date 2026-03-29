@@ -150,6 +150,7 @@ Files:
 What happens here:
 
 - The FastAPI backend loads model artifacts
+- The local SQLite database is initialized
 - Demo profiles are loaded
 - Participants and observations are ingested into memory
 - The twin engine computes a current summary for each participant
@@ -169,9 +170,23 @@ Why in-memory twins:
 - Faster for a live demo
 - Good enough for the hackathon scope
 
+Why add SQLite:
+
+- Demo patients now persist across backend restarts
+- New uploaded patient files can be saved locally
+- We keep the architecture lightweight without needing Postgres
+
 Key talking point:
 
 “The twin engine is a lightweight in-memory layer that keeps the current participant state and turns it into a live operational summary.”
+
+Persistence detail:
+
+- Source of truth is now the local SQLite file at `backend/data/trialtwin.db`
+- The API loads that data on startup
+- The twin engine hydrates itself from the database
+- New ingests and uploads are written back to the database
+- Uploaded patient files must include at least one observation so the twin engine can build a current summary
 
 ### 5. Scenario simulation
 

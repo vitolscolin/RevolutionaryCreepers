@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from .database import LocalTrialStore
 from .feature_pipeline import build_feature_row
 from .model_store import load_artifact, load_feature_config
 from .risk_equations import calculate_health_score, project_future_state
@@ -17,7 +18,8 @@ class PatientTwin:
 
 
 class TwinEngine:
-    def __init__(self) -> None:
+    def __init__(self, store: LocalTrialStore) -> None:
+        self.store = store
         self.twins: dict[str, PatientTwin] = {}
         self.demo_profiles: list[dict] = []
         self.models = {
@@ -26,8 +28,14 @@ class TwinEngine:
             "adherence": load_artifact("model_adherence.joblib"),
         }
         self.feature_config = load_feature_config()
+        self._hydrate_from_store()
 
-    def ingest(self, patient: dict, observations: list[dict]) -> None:
+    def _hydrate_from_store(self) -> None:
+        patients, observations = self.store.load_all()
+        if patients:
+            self.ingest_bulk(patients, observations, persist=False)
+
+    def ingest(self, patient: dict, observations: list[dict], persist: bool = True) -> None:
         existing = self.twins.get(patient["patient_id"])
         merged_observations = list(existing.observations) if existing else []
         merged_observations.extend(observations)
@@ -41,18 +49,23 @@ class TwinEngine:
             patient=patient,
             observations=merged_observations,
         )
+        if persist:
+            self.store.upsert_patient(patient)
+            self.store.upsert_observations(patient["patient_id"], observations)
 
-    def ingest_bulk(self, patients: list[dict], observations: list[dict]) -> None:
+    def ingest_bulk(self, patients: list[dict], observations: list[dict], persist: bool = True) -> None:
         grouped: dict[str, list[dict]] = defaultdict(list)
         for observation in observations:
             grouped[observation["patient_id"]].append(observation)
 
         for patient in patients:
-            self.ingest(patient, grouped.get(patient["patient_id"], []))
+            self.ingest(patient, grouped.get(patient["patient_id"], []), persist=persist)
 
     def list_patients(self) -> list[dict]:
         entries = []
         for patient_id, twin in sorted(self.twins.items()):
+            if not twin.observations:
+                continue
             summary = self.get_twin_summary(patient_id)
             entries.append(
                 {
@@ -68,6 +81,8 @@ class TwinEngine:
 
     def get_twin_summary(self, patient_id: str) -> dict:
         twin = self._get_twin(patient_id)
+        if not twin.observations:
+            raise KeyError(f"No observations available for patient_id: {patient_id}")
         patient_frame = pd.DataFrame([twin.patient])
         observation_frame = pd.DataFrame(twin.observations).sort_values("ts")
         latest = observation_frame.iloc[-1].to_dict()
