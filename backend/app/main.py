@@ -5,16 +5,19 @@ import os
 from pathlib import Path
 
 import pandas as pd
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from .database import LocalTrialStore
 from .model_store import artifacts_ready
 from .schemas import IngestRequest, PredictRequest, SimulateRequest
 from .twin_engine import TwinEngine
+from .upload_parser import parse_upload_payload
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT_DIR / "data"
+DB_PATH = DATA_DIR / "trialtwin.db"
 TOKEN = os.getenv("TRIALTWIN_TOKEN", "dev-token")
 
 app = FastAPI(title="TrialTwin AI", version="0.1.0")
@@ -27,6 +30,7 @@ app.add_middleware(
 )
 
 engine: TwinEngine | None = None
+store: LocalTrialStore | None = None
 
 
 def require_token(x_trialtwin_token: str = Header(default="")) -> None:
@@ -36,11 +40,12 @@ def require_token(x_trialtwin_token: str = Header(default="")) -> None:
 
 @app.on_event("startup")
 def startup_event() -> None:
-    global engine
+    global engine, store
     if not artifacts_ready():
         raise RuntimeError("Model artifacts are missing. Run generate_synthetic.py and train_model.py first.")
 
-    engine = TwinEngine()
+    store = LocalTrialStore(DB_PATH)
+    engine = TwinEngine(store=store)
     demo_profiles_path = DATA_DIR / "demo_profiles.json"
     if demo_profiles_path.exists():
         engine.set_demo_profiles(json.loads(demo_profiles_path.read_text()))
@@ -48,7 +53,8 @@ def startup_event() -> None:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "artifacts_ready": artifacts_ready()}
+    patient_count = len(_engine().twins) if engine is not None else 0
+    return {"status": "ok", "artifacts_ready": artifacts_ready(), "db_path": str(DB_PATH), "patient_count": patient_count}
 
 
 @app.get("/patients", dependencies=[Depends(require_token)])
@@ -63,6 +69,33 @@ def ingest(payload: IngestRequest) -> dict:
         observations=[observation.model_dump() for observation in payload.observations],
     )
     return {"status": "ingested", "patient_id": payload.patient.patient_id, "observation_count": len(payload.observations)}
+
+
+@app.post("/upload", dependencies=[Depends(require_token)])
+async def upload_patient_file(file: UploadFile = File(...)) -> dict:
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Uploaded file must have a filename.")
+
+    raw_payload = await file.read()
+    try:
+        patient, observations, source_type = parse_upload_payload(file.filename, raw_payload)
+        _engine().ingest(patient=patient, observations=observations)
+        _store().record_upload(
+            patient_id=patient["patient_id"],
+            source_name=file.filename,
+            source_type=source_type,
+            observation_count=len(observations),
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return {
+        "status": "uploaded",
+        "patient_id": patient["patient_id"],
+        "source_name": file.filename,
+        "source_type": source_type,
+        "observation_count": len(observations),
+    }
 
 
 @app.get("/twin/{patient_id}", dependencies=[Depends(require_token)])
@@ -124,3 +157,9 @@ def _engine() -> TwinEngine:
     if engine is None:
         raise HTTPException(status_code=503, detail="Twin engine not initialized")
     return engine
+
+
+def _store() -> LocalTrialStore:
+    if store is None:
+        raise HTTPException(status_code=503, detail="Trial store not initialized")
+    return store

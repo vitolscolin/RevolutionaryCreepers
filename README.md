@@ -15,6 +15,8 @@ TrialTwin AI combines four ideas in one experience:
 
 The app shows how recent participant behavior can affect safety risk, dropout risk, and projected health score over time.
 
+The backend now uses a local SQLite database so demo participants persist across restarts and new patient files can be uploaded into the system.
+
 ## Why It Matters
 
 Clinical trials do not just fail because of biology. They also fail because participants drift, disengage, or develop signals that are noticed too late.
@@ -55,7 +57,7 @@ At a high level:
 - Visualization: Recharts + custom SVG
 - Backend: FastAPI
 - Modeling: pandas, scikit-learn
-- Data: fully synthetic CSV- and JSON-based demo data
+- Data: synthetic CSV/JSON inputs plus a persistent local SQLite store
 
 ## Repo Map
 
@@ -73,6 +75,7 @@ backend/
     seed_demo_data.py
   data/
   artifacts/
+  data/trialtwin.db
 
 frontend/
   src/
@@ -123,6 +126,8 @@ In a second terminal:
 python3 backend/scripts/seed_demo_data.py
 ```
 
+This seeds the API and persists the demo participants into `backend/data/trialtwin.db`.
+
 ### 6. Run the frontend
 
 ```bash
@@ -132,6 +137,65 @@ npm run dev
 ```
 
 Open `http://localhost:5173`.
+
+## Upload New Patient Data
+
+The backend supports uploading a new patient file into the local SQLite database.
+
+### JSON upload
+
+Upload a file that matches the existing ingest shape.
+Important: uploaded patients must include at least one observation.
+
+```json
+{
+  "patient": {
+    "patient_id": "P901",
+    "age": 59,
+    "weight": 84.2,
+    "hba1c": 7.1,
+    "systolic_bp": 128,
+    "diastolic_bp": 81,
+    "cholesterol": 190,
+    "exercise_score": 58,
+    "diet_score": 61,
+    "medication_adherence_baseline": 82,
+    "profile_label": "uploaded_patient"
+  },
+  "observations": [
+    {
+      "patient_id": "P901",
+      "ts": "2025-03-01T00:00:00",
+      "hr": 74,
+      "systolic_bp": 128,
+      "diastolic_bp": 81,
+      "glucose_proxy": 136,
+      "symptom_score": 2.4,
+      "med_due": 1,
+      "med_taken": 1,
+      "adherence_percent": 100,
+      "drug_level": 0.81,
+      "lab_flag": 0,
+      "adverse_event": 0,
+      "dropout_event": 0
+    }
+  ]
+}
+```
+
+### CSV upload
+
+CSV uploads should include the patient static columns plus the observation columns in each row for a single `patient_id`.
+
+### Example upload request
+
+```bash
+curl -X POST http://localhost:8000/upload \
+  -H "x-trialtwin-token: dev-token" \
+  -F "file=@patient_upload.json"
+```
+
+If the uploaded file has no observations, the API will reject it.
 
 ## Demo Flow For Visitors
 
