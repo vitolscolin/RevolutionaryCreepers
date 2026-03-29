@@ -183,10 +183,6 @@ Important: uploaded patients must include at least one observation.
 }
 ```
 
-### CSV upload
-
-CSV uploads should include the patient static columns plus the observation columns in each row for a single `patient_id`.
-
 ### Example upload request
 
 ```bash
